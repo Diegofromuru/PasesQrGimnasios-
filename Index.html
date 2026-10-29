@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PaseGym - Radar & Vouchers</title>
+    <!-- FontAwesome para Íconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Librería QRCode.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0a0e17;
+            --card-bg: #131b2e;
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --accent: #00ff87;
+            --text-main: #f0f4f8;
+            --text-muted: #8a99ad;
+            --border-color: #1e2d4a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            padding-bottom: 30px;
+        }
+
+        /* HEADER */
+        header {
+            background: linear-gradient(135deg, #0d1527, #17233e);
+            padding: 20px 16px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        header p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* BUSCADOR Y FILTROS */
+        .controls {
+            padding: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 12px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 12px 12px 40px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .search-box input:focus {
+            border-color: var(--primary);
+        }
+
+        /* CONTENEDOR DE GIMNASIOS */
+        .gym-container {
+            padding: 0 16px;
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* TARJETA DE GIMNASIO */
+        .gym-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .gym-card:active {
+            transform: scale(0.98);
+        }
+
+        .gym-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .gym-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .gym-tag {
+            background: rgba(0, 255, 135, 0.15);
+            color: var(--accent);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid rgba(0, 255, 135, 0.3);
+        }
+
+        .gym-info {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .gym-info i {
+            width: 18px;
+            color: var(--primary);
+        }
+
+        .btn-claim {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: #000;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        /* MODAL DEL QR */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 14px; right: 16px;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .modal-content h3 {
+            font-size: 1.2rem;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+
+        .modal-content p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .qr-box {
+            background: #ffffff;
+            padding: 16px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: #0d1527;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        /* SECTOR HORARIOS */
+        .time-selection {
+            text-align: left;
+            margin-bottom: 16px;
+        }
+
+        .time-selection label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .options-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .time-option {
+            flex: 1;
+            text-align: center;
+            background: #0d1527;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 6px;
+            font-size: 0.8rem;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .time-option input {
+            display: none;
+        }
+
+        .time-option:has(input:checked) {
+            border-color: var(--accent);
+            background: rgba(0, 255, 135, 0.15);
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .btn-confirm {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: var(--accent);
+            color: #000;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .btn-whatsapp {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #25d366;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>PaseGym Mercedes</h1>
+        <p>Generá tu pase de prueba y validalo en recepción</p>
+    </header>
+
+    <div class="controls">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" placeholder="Buscar gimnasio o zona..." onkeyup="filterGyms()">
+        </div>
+    </div>
+
+    <!-- Lista dinámica de gimnasios -->
+    <div class="gym-container" id="gymList"></div>
+
+    <!-- Modal para ingresar datos y ver QR -->
+    <div class="modal" id="qrModal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h3 id="modalGymTitle">Gimnasio</h3>
+            <p>Ingresá tus datos para activar tu pase personalizado:</p>
+            
+            <div id="formSection">
+                <input type="text" id="userName" class="modal-input" placeholder="Tu Nombre y Apellido">
+                <input type="tel" id="userPhone" class="modal-input" placeholder="Tu WhatsApp (Ej: 099123456)">
+                
+                <!-- SELECCIÓN DE HORARIO -->
+                <div class="time-selection">
+                    <label><i class="fa-solid fa-clock"></i> ¿En qué horario preferís asistir?</label>
+                    <div class="options-group">
+                        <label class="time-option">
+                            <input type="radio" name="horario" value="Mañana" checked>
+                            <i class="fa-solid fa-sun"></i> Mañana
+                        </label>
+                        <label class="time-option">
+                            <input type="radio" name="horario" value="Tarde">
+                            <i class="fa-solid fa-cloud-sun"></i> Tarde
+                        </label>
+                        <label class="time-option">
+                            <input type="radio" name="horario" value="Noche">
+                            <i class="fa-solid fa-moon"></i> Noche
+                        </label>
+                    </div>
+                </div>
+
+                <button class="btn-confirm" onclick="generateQR()">Generar Mi Pase QR</button>
+            </div>
+
+            <div id="qrSection" style="display: none;">
+                <div class="qr-box" id="qrcode"></div>
+                
+                <!-- INSTRUCCIONES PARA EL GIMNASIO -->
+                <div style="background: rgba(0, 242, 254, 0.05); border: 1px dashed var(--primary); padding: 10px; border-radius: 8px; margin-top: 4px; font-size: 0.8rem; text-align: left;">
+                    <strong style="color: var(--primary);"><i class="fa-solid fa-circle-info"></i> Instrucciones para el Gimnasio:</strong><br>
+                    1. Mostrá este QR en la recepción.<br>
+                    2. El recepcionista validará tu visita.<br>
+                    3. ¡Disfrutá de tu beneficio y entrená!
+                </div>
+
+                <a id="waBtn" target="_blank" class="btn-whatsapp">
+                    <i class="fa-brands fa-whatsapp"></i> Validar por WhatsApp
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // URL de tu Webhook de Google Apps Script vinculado a PasesQrGimnasios
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby-_lJK4QFWkoxGvVszOMuE0HPrv7qKZcce9oyTwsmYctl6RTVE89nekDRKq1tGBLKDvg/exec";
+
+        // LISTA INTERACTIVA DE GIMNASIOS
+        const gimnasios = [
+            {
+                id: "PG01",
+                nombre: "PowerGym",
+                direccion: "Mercedes, Soriano",
+                horario: "Lunes a Viernes: 07:00 - 22:00 hs",
+                beneficio: "1° Día Gratis / Pase Especial",
+                tag: "Verificado"
+            },
+            {
+                id: "GYM02",
+                nombre: "Gimnasio Centro",
+                direccion: "Zona Plaza Rivera, Mercedes",
+                horario: "Lunes a Sábado: 08:00 - 21:00 hs",
+                beneficio: "Pase Libre de Prueba",
+                tag: "Nuevo"
+            },
+            {
+                id: "GYM03",
+                nombre: "Espacio Fitness & Fuerza",
+                direccion: "Cerca de Costanera / Isla del Puerto",
+                horario: "Lunes a Viernes: 06:30 - 21:30 hs",
+                beneficio: "20% OFF primer mes + Clase Gratis",
+                tag: "Promoción"
+            }
+        ];
+
+        let selectedGym = null;
+
+        // Renderizar la lista en pantalla
+        function renderGyms(data) {
+            const container = document.getElementById("gymList");
+            container.innerHTML = "";
+
+            if (data.length === 0) {
+                container.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 20px;">No se encontraron gimnasios.</p>`;
+                return;
+            }
+
+            data.forEach(gym => {
+                const card = document.createElement("div");
+                card.className = "gym-card";
+                card.innerHTML = `
+                    <div class="gym-header">
+                        <span class="gym-title">${gym.nombre}</span>
+                        <span class="gym-tag">${gym.tag}</span>
+                    </div>
+                    <div class="gym-info">
+                        <div><i class="fa-solid fa-location-dot"></i> ${gym.direccion}</div>
+                        <div><i class="fa-solid fa-clock"></i> ${gym.horario}</div>
+                        <div><i class="fa-solid fa-ticket"></i> <strong style="color: #fff;">${gym.beneficio}</strong></div>
+                    </div>
+                    <button class="btn-claim" onclick="openModal('${gym.id}')">
+                        <i class="fa-solid fa-qrcode"></i> Obtener Pase QR
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Buscador interactivo
+        function filterGyms() {
+            const query = document.getElementById("searchInput").value.toLowerCase();
+            const filtered = gimnasios.filter(g => 
+                g.nombre.toLowerCase().includes(query) || 
+                g.direccion.toLowerCase().includes(query)
+            );
+            renderGyms(filtered);
+        }
+
+        // Funciones del Modal
+        function openModal(gymId) {
+            selectedGym = gimnasios.find(g => g.id === gymId);
+            document.getElementById("modalGymTitle").innerText = selectedGym.nombre;
+            document.getElementById("formSection").style.display = "block";
+            document.getElementById("qrSection").style.display = "none";
+            document.getElementById("qrcode").innerHTML = "";
+            document.getElementById("userName").value = "";
+            document.getElementById("userPhone").value = "";
+            document.getElementById("qrModal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("qrModal").style.display = "none";
+        }
+
+        // Generar Código QR y Enviar a Google Sheets
+        function generateQR() {
+            const name = document.getElementById("userName").value.trim();
+            const phone = document.getElementById("userPhone").value.trim();
+            const horarioRadio = document.querySelector('input[name="horario"]:checked');
+            const horario = horarioRadio ? horarioRadio.value : "Mañana";
+
+            if (!name || !phone) {
+                alert("Por favor completa tu nombre y número de WhatsApp.");
+                return;
+            }
+
+            const qrData = `PASE|GYM:${selectedGym.nombre}|CLI:${name}|TEL:${phone}|HORARIO:${horario}|FECHA:${new Date().toLocaleDateString('es-UY')}`;
+
+            document.getElementById("formSection").style.display = "none";
+            document.getElementById("qrSection").style.display = "block";
+
+            document.getElementById("qrcode").innerHTML = "";
+            new QRCode(document.getElementById("qrcode"), {
+                text: qrData,
+                width: 170,
+                height: 170,
+                colorDark: "#0a0e17",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            // Configurar enlace de WhatsApp para validación rápida
+            const mensajeWA = `Hola! Soy ${name}, acabo de generar mi pase para ${selectedGym.nombre} en Pack4Fit (${horario}). Tel: ${phone}`;
+            document.getElementById("waBtn").href = `https://wa.me/?text=${encodeURIComponent(mensajeWA)}`;
+
+            // Objeto de datos que se envía a Google Apps Script
+            const payload = {
+                gimnasio: selectedGym.nombre,
+                cliente: name,
+                telefono: phone,
+                horario: horario
+            };
+
+            // Enviar datos al Webhook de Google Sheets
+            fetch(WEB_APP_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                console.log("¡Pase registrado con horario en Google Sheets!");
+            })
+            .catch(error => {
+                console.error("Error al registrar:", error);
+            });
+        }
+
+        // Inicializar app al cargar
+        renderGyms(gimnasios);
+    </script>
+</body>
+</html>
