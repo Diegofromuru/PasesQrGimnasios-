@@ -381,7 +381,7 @@
         // URL de tu Webhook de Google Apps Script vinculado a PasesQrGimnasios
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby-_lJK4QFWkoxGvVszOMuE0HPrv7qKZcce9oyTwsmYctl6RTVE89nekDRKq1tGBLKDvg/exec";
 
-        // LISTA INTERACTIVA DE GIMNASIOS CON TELÉFONOS DE CONTACTO
+        // LISTA INTERACTIVA DE GIMNASIOS
         const gimnasios = [
             {
                 id: "PG01",
@@ -389,8 +389,7 @@
                 direccion: "Mercedes, Soriano",
                 horario: "Lunes a Viernes: 07:00 - 22:00 hs",
                 beneficio: "1° Día Gratis / Pase Especial",
-                tag: "Verificado",
-                telefono: "59899000000" // Cambiar por el real de Julio cuando coordinen
+                tag: "Verificado"
             },
             {
                 id: "GYM02",
@@ -398,8 +397,7 @@
                 direccion: "Zona Plaza Rivera, Mercedes",
                 horario: "Lunes a Sábado: 08:00 - 21:00 hs",
                 beneficio: "Pase Libre de Prueba",
-                tag: "Nuevo",
-                telefono: "59899111111" // Número de prueba
+                tag: "Nuevo"
             },
             {
                 id: "GYM03",
@@ -407,8 +405,7 @@
                 direccion: "Cerca de Costanera / Isla del Puerto",
                 horario: "Lunes a Viernes: 06:30 - 21:30 hs",
                 beneficio: "20% OFF primer mes + Clase Gratis",
-                tag: "Promoción",
-                telefono: "59899222222" // Número de prueba
+                tag: "Promoción"
             }
         ];
 
@@ -498,10 +495,9 @@
                 correctLevel: QRCode.CorrectLevel.H
             });
 
-            // Configurar enlace de WhatsApp directo al número del gimnasio seleccionado
-            const mensajeWA = `Hola! Soy ${name}, acabo de generar mi pase para ${selectedGym.nombre} en PaseGym (${horario}). Mi número es: ${phone}`;
-            const targetPhone = selectedGym.telefono || "59899000000";
-            document.getElementById("waBtn").href = `https://wa.me/${targetPhone}?text=${encodeURIComponent(mensajeWA)}`;
+            // Configurar enlace de WhatsApp para validación rápida
+            const mensajeWA = `Hola! Soy ${name}, acabo de generar mi pase para ${selectedGym.nombre} en Pack4Fit (${horario}). Tel: ${phone}`;
+            document.getElementById("waBtn").href = `https://wa.me/?text=${encodeURIComponent(mensajeWA)}`;
 
             // Objeto de datos que se envía a Google Apps Script
             const payload = {
